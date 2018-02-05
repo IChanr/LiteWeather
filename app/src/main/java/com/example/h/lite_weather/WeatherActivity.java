@@ -1,6 +1,8 @@
 package com.example.h.lite_weather;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -57,6 +59,14 @@ public class WeatherActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= 21) {
+            //判断版本是否大于5.0
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            //表示活动的布局回显示在状态栏上面
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+            //设置状态栏透明
+        }
         setContentView(R.layout.activity_weather);
         initView();
         LocationId = getIntent().getStringExtra("locationid");
@@ -201,7 +211,7 @@ public class WeatherActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Log.d(TAG, "run: "+url);
+                            Log.d(TAG, "run: " + url);
                             SharedPreferences.Editor editor = getSharedPreferences("config", MODE_PRIVATE).edit();
                             editor.putString("bing_pic", url);
                             editor.commit();
