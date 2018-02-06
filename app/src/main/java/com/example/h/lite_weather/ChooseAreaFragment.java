@@ -133,7 +133,7 @@ public class ChooseAreaFragment extends Fragment {
                         weatherActivity.queryServer(weatherActivity.WRATHER_TYPE_FORECAST);
                         Log.d(TAG, "onItemClick: 侧栏碎片");
                     }
-                }
+                }   
             }
         });
         queryProvince();
