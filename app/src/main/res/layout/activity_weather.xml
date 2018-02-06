@@ -11,27 +11,46 @@
         android:scaleType="centerCrop"
         android:src="@drawable/bg" />
 
-    <ScrollView
+    <android.support.v4.widget.DrawerLayout
+        android:id="@+id/drawerlayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:overScrollMode="never"
-        android:scrollbars="none">
+        android:layout_height="match_parent">
 
-        <LinearLayout
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swip_fresh"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fitsSystemWindows="true"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <include layout="@layout/title_layout"></include>
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                android:scrollbars="none">
 
-            <include layout="@layout/now_layout"></include>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fitsSystemWindows="true"
+                    android:orientation="vertical">
 
-            <include layout="@layout/forecast_latout"></include>
+                    <include layout="@layout/title_layout"></include>
 
-            <include layout="@layout/aqi_layout"></include>
+                    <include layout="@layout/now_layout"></include>
 
-            <include layout="@layout/suggestion_layout"></include>
-        </LinearLayout>
-    </ScrollView>
+                    <include layout="@layout/forecast_latout"></include>
+
+                    <include layout="@layout/aqi_layout"></include>
+
+                    <include layout="@layout/suggestion_layout"></include>
+                </LinearLayout>
+            </ScrollView>
+        </android.support.v4.widget.SwipeRefreshLayout>
+    <fragment
+        android:id="@+id/fragment1"
+        android:name="com.example.h.lite_weather.ChooseAreaFragment"
+        android:layout_gravity="start"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    </android.support.v4.widget.DrawerLayout>
 </FrameLayout>

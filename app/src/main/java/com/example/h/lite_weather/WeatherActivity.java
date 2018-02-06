@@ -1,13 +1,18 @@
 package com.example.h.lite_weather;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -35,10 +40,10 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
-    private final static int WEATHER_TYPE_NOW = 0;
-    private final static int WRATHER_TYPE_FORECAST = 1;
-    private final static int WRATHER_TYPE_SUGGESTION = 2;
-    private String LocationId = null;
+    public final static int WEATHER_TYPE_NOW = 0;
+    public final static int WRATHER_TYPE_FORECAST = 1;
+    public final static int WRATHER_TYPE_SUGGESTION = 2;
+    public String LocationId = null;
     private Forecast_Weather mForecast_weather;
     private Now_Weather mNow_weather;
     private Suggestion_Weather mSuggestion_weather;
@@ -54,6 +59,9 @@ public class WeatherActivity extends AppCompatActivity {
 
     private ImageView bing_Pic_img;
 
+    public SwipeRefreshLayout mSwipeRefreshLayout;
+    public DrawerLayout mDrawerLayout;
+    private Button btnHome;
     private String TAG = "TAG";
 
     @Override
@@ -79,13 +87,14 @@ public class WeatherActivity extends AppCompatActivity {
         String weatherNow = editor.getString("now_weather_data", null);
         String weatherSuggestion = editor.getString("suggestion_data", null);
         String weatherForecast = editor.getString("forecast_data", null);
-        String bingUrl = editor.getString("bing_pic", null);
-        if (bingUrl != null) {
-            Glide.with(WeatherActivity.this).load("http://cn.bing" +
-                    ".com/az/hprichbg/rb/StormySeas_ROW10116979039_1920x1080.jpg").into(bing_Pic_img);
-        } else {
-            loadImg();
-        }
+//        String bingUrl = editor.getString("bing_pic", null);
+//        if (bingUrl != null) {
+//            Glide.with(WeatherActivity.this).load(bingUrl).into(bing_Pic_img);
+        //不管有没有都去服务器获取最新的地址
+//        } else {
+//            loadImg();
+//        }
+        loadImg();
         if (weatherNow != null) {
             List<Now_Weather> now = gson.fromJson(weatherNow, new TypeToken<List<Now_Weather>>() {
             }.getType());
@@ -122,7 +131,7 @@ public class WeatherActivity extends AppCompatActivity {
 
     }
 
-    private void queryServer(final int type) {
+    public void queryServer(final int type) {
         Log.d("TAG", "queryServer: " + "进入查询");
         String ip = null;
         switch (type) {
@@ -131,7 +140,6 @@ public class WeatherActivity extends AppCompatActivity {
                 break;
             case WRATHER_TYPE_SUGGESTION:
                 ip = HttpUtil.SuggestionIp + LocationId + HttpUtil.key;
-
                 break;
             case WRATHER_TYPE_FORECAST:
                 ip = HttpUtil.ForecastIp + LocationId + HttpUtil.key;
@@ -169,6 +177,7 @@ public class WeatherActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    Log.d(TAG, "run: 联网查询成功 调用显示数据的方法");
                                     loadData();
                                 }
                             });
@@ -195,6 +204,24 @@ public class WeatherActivity extends AppCompatActivity {
         tvSuggestionCarWash = findViewById(R.id.tv_suggestion_carwash);
         tvSuggestionSport = findViewById(R.id.tv_suggestion_sport);
         tvSuggestionComfort = findViewById(R.id.tv_suggestion_comfort);
+        mSwipeRefreshLayout = findViewById(R.id.swip_fresh);
+        mDrawerLayout = findViewById(R.id.drawerlayout);
+        btnHome = findViewById(R.id.btn_home);
+        btnHome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mDrawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                queryServer(WEATHER_TYPE_NOW);
+                queryServer(WRATHER_TYPE_SUGGESTION);
+                queryServer(WRATHER_TYPE_FORECAST);
+
+            }
+        });
     }
 
     private void loadImg() {
@@ -224,42 +251,52 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     private void showInfo(int type) {
-        Log.d(TAG, "showInfo: " + "显示信息方法");
+        Log.d(TAG, "showInfo: " + "显示信息方法" + type);
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
         switch (type) {
 
             case WRATHER_TYPE_SUGGESTION:
-                String suggestionComf = "舒适度:" + mSuggestion_weather.getLifestyle().get(0).getTxt();
-                String suggestionSport = "运动建议:" + mSuggestion_weather.getLifestyle().get(3).getTxt();
-                String suggestionCarWash = "洗车指数:" + mSuggestion_weather.getLifestyle().get(6).getTxt();
-                tvSuggestionComfort.setText(suggestionComf);
-                tvSuggestionSport.setText(suggestionSport);
-                tvSuggestionCarWash.setText(suggestionCarWash);
+                if (mSuggestion_weather.getStatus().equals("ok")) {
+                    String suggestionComf = "舒适度:" + mSuggestion_weather.getLifestyle().get(0).getTxt();
+                    String suggestionSport = "运动建议:" + mSuggestion_weather.getLifestyle().get(3).getTxt();
+                    String suggestionCarWash = "洗车指数:" + mSuggestion_weather.getLifestyle().get(6).getTxt();
+                    tvSuggestionComfort.setText(suggestionComf);
+                    tvSuggestionSport.setText(suggestionSport);
+                    tvSuggestionCarWash.setText(suggestionCarWash);
+                }
                 //生活建议
                 break;
             case WRATHER_TYPE_FORECAST:
                 //天气预报
-                mLinearLayoutForecast.removeAllViews();
-                for (Forecast_Weather.DailyForecastBean dailyForecastBean : mForecast_weather.getDaily_forecast()) {
-                    View view = LayoutInflater.from(this).inflate(R.layout.forecast_item_layout,
-                            mLinearLayoutForecast, false);
-                    TextView tvTime = view.findViewById(R.id.tv_forecast_item_date);
-                    TextView tvMax = view.findViewById(R.id.tv_forecast_item_max);
-                    TextView tvMin = view.findViewById(R.id.tv_forecast_item_min);
-                    TextView tvInfo = view.findViewById(R.id.tv_forecast_item_info);
-                    tvTime.setText(dailyForecastBean.getDate());
-                    tvInfo.setText(dailyForecastBean.getCond_txt_n());
-                    tvMax.setText(dailyForecastBean.getTmp_max());
-                    tvMin.setText(dailyForecastBean.getTmp_min());
-                    mLinearLayoutForecast.addView(view);
+                if (mForecast_weather.getStatus().equals("ok")) {
+                    mLinearLayoutForecast.removeAllViews();
+                    for (Forecast_Weather.DailyForecastBean dailyForecastBean : mForecast_weather.getDaily_forecast()) {
+                        View view = LayoutInflater.from(this).inflate(R.layout.forecast_item_layout,
+                                mLinearLayoutForecast, false);
+                        TextView tvTime = view.findViewById(R.id.tv_forecast_item_date);
+                        TextView tvMax = view.findViewById(R.id.tv_forecast_item_max);
+                        TextView tvMin = view.findViewById(R.id.tv_forecast_item_min);
+                        TextView tvInfo = view.findViewById(R.id.tv_forecast_item_info);
+                        tvTime.setText(dailyForecastBean.getDate());
+                        tvInfo.setText(dailyForecastBean.getCond_txt_n());
+                        tvMax.setText(dailyForecastBean.getTmp_max());
+                        tvMin.setText(dailyForecastBean.getTmp_min());
+                        mLinearLayoutForecast.addView(view);
+                    }
                 }
+                mSwipeRefreshLayout.setRefreshing(false);
+
                 break;
             case WEATHER_TYPE_NOW:
                 //当前天气
-                tvCityName.setText(mNow_weather.getBasic().getLocation());
-                String time = mNow_weather.getUpdate().getLoc();
-                tvUpdateTime.setText(time.substring(time.length() - 5));
-                tvWeatherC.setText(mNow_weather.getNow().getTmp());
-                tvWeatherC2.setText(mNow_weather.getNow().getCond_txt());
+                if (mNow_weather.getStatus().equals("ok")) {
+                    tvCityName.setText(mNow_weather.getBasic().getLocation());
+                    String time = mNow_weather.getUpdate().getLoc();
+                    tvUpdateTime.setText(time.substring(time.length() - 5));
+                    tvWeatherC.setText(mNow_weather.getNow().getTmp());
+                    tvWeatherC2.setText(mNow_weather.getNow().getCond_txt());
+                }
                 break;
             default:
                 break;

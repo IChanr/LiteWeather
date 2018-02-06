@@ -15,7 +15,10 @@ import static android.content.ContentValues.TAG;
 
 public class HttpUtil {
     public static String Address = "http://guolin.tech/api/china";
-    public static String key = "&key=21bbdda3aa5a4257b2af3dbc9384dc1c";
+    public static String key = "&key=aa51961b9ab24cee8536259aae4fd6bf";
+    /**
+     * key 2   21bbdda3aa5a4257b2af3dbc9384dc1c
+     */
     private static String WeatherIp = "https://free-api.heweather.com";
     public static String SuggestionIp = WeatherIp + "/s6/weather/lifestyle?location=";
     public static String NowIp = WeatherIp + "/s6/weather/now?location=";

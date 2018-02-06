@@ -72,12 +72,14 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle
             savedInstanceState) {
-        LocationID=loadLocationId();
-        if (LocationID != null) {
-            Intent intent = new Intent(getActivity(), WeatherActivity.class);
-            intent.putExtra("locationid", LocationID);
-            getActivity().startActivity(intent);
-            getActivity().finish();
+        if (getActivity() instanceof MainActivity) {
+            LocationID = loadLocationId();
+            if (LocationID != null) {
+                Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                intent.putExtra("locationid", LocationID);
+                getActivity().startActivity(intent);
+                getActivity().finish();
+            }
         }
         View view = inflater.inflate(R.layout.choose_area_layout, container, false);
         mButton = view.findViewById(R.id.btn_back);
@@ -114,12 +116,23 @@ public class ChooseAreaFragment extends Fragment {
                     chooseCity = mCityList.get(i);
                     queryCounty();
                 } else if (CHOOSE_TYPE_Now == CHOOSE_TYPE_County) {
-                    chooseCounty=mCountyList.get(i);
+                    chooseCounty = mCountyList.get(i);
                     savaLocationId();
-                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                    intent.putExtra("locationid",chooseCounty.getCountyCode());
-                    getActivity().startActivity(intent);
-                    getActivity().finish();
+                    if (getActivity() instanceof MainActivity) {
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                        intent.putExtra("locationid", chooseCounty.getCountyCode());
+                        getActivity().startActivity(intent);
+                        getActivity().finish();
+                    } else if (getActivity() instanceof WeatherActivity) {
+                        WeatherActivity weatherActivity = (WeatherActivity) getActivity();
+                        weatherActivity.mDrawerLayout.closeDrawers();
+                        weatherActivity.mSwipeRefreshLayout.setRefreshing(true);
+                        weatherActivity.LocationId=chooseCounty.getCountyCode();
+                        weatherActivity.queryServer(weatherActivity.WRATHER_TYPE_SUGGESTION);
+                        weatherActivity.queryServer(weatherActivity.WEATHER_TYPE_NOW);
+                        weatherActivity.queryServer(weatherActivity.WRATHER_TYPE_FORECAST);
+                        Log.d(TAG, "onItemClick: 侧栏碎片");
+                    }
                 }
             }
         });
